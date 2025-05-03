@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="app-title">
+                <i class="fas fa-tasks"></i>
+                <h1>Todo List</h1>
+            </div>
+            <div class="user-info">
+                <div class="profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>{{ current_user.email }}</span>
+                </div>
+                <a href="{{ url_for('logout') }}" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="todo-input-container">
+            <div class="input-group">
+                <input type="text" id="todo-input" placeholder=" " autocomplete="off">
+                <label for="todo-input">Add a new task</label>
+                <button id="add-btn" class="add-btn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="todo-controls">
+            <div class="stats">
+                <span id="total-tasks">0 tasks</span>
+                <span id="completed-tasks">0 completed</span>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
+        </div>
+
+        <div class="todo-list" id="todo-list">
+            <!-- Todos will be added here dynamically -->
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <p>No tasks found. Add your first task!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Edit Task</h3>
+            <input type="text" id="edit-input">
+            <button class="save-btn">Save Changes</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

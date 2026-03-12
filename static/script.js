@@ -10,8 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModal = document.getElementById('closeModal');
     const editForm = document.getElementById('edit-form');
     
+    // Pro Features Selectors
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    const analyticsBtn = document.getElementById('analytics-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const analyticsModal = document.getElementById('analyticsModal');
+    const closeAnalyticsModal = document.getElementById('closeAnalyticsModal');
+    
     let todos = [];
     let currentFilter = 'all';
+    let currentSearchTerm = '';
+    let currentSortBy = 'newest';
+    let chartInstance = null;
+
 
     // Fetch Initial Todos
     fetchTodos();
@@ -58,6 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === editModal) {
             editModal.classList.remove('show');
         }
+        if (e.target === analyticsModal) {
+            analyticsModal.classList.remove('show');
+        }
     });
 
     // Edit Form submit
@@ -102,6 +117,95 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTodos();
         });
     });
+
+    // Searching
+    searchInput.addEventListener('input', (e) => {
+        currentSearchTerm = e.target.value.toLowerCase();
+        renderTodos();
+    });
+
+    // Sorting
+    sortSelect.addEventListener('change', (e) => {
+        currentSortBy = e.target.value;
+        renderTodos();
+    });
+
+    // Export CSV
+    exportBtn.addEventListener('click', () => {
+        if (todos.length === 0) {
+            alert("No tasks to export!");
+            return;
+        }
+        const headers = ["ID", "Title", "Category", "Priority", "Completed", "Due Date", "Date Created"];
+        const csvContent = [
+            headers.join(","),
+            ...todos.map(t => `"${t.id}","${t.title}","${t.category}","${t.priority}","${t.completed}","${t.due_date || ''}","${t.date_created || ''}"`)
+        ].join("\n");
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "pro_tasks_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+
+    // Analytics Modal
+    analyticsBtn.addEventListener('click', () => {
+        analyticsModal.classList.add('show');
+        renderChart();
+    });
+
+    closeAnalyticsModal.addEventListener('click', () => {
+        analyticsModal.classList.remove('show');
+    });
+
+    function renderChart() {
+        const ctx = document.getElementById('productivityChart').getContext('2d');
+        
+        const completedCount = todos.filter(t => t.completed).length;
+        const totalCount = todos.length;
+        
+        document.getElementById('stat-completion-rate').textContent = totalCount ? Math.round((completedCount/totalCount)*100) + '%' : '0%';
+        
+        const categories = {};
+        todos.forEach(t => {
+            const cat = t.category || 'General';
+            categories[cat] = (categories[cat] || 0) + 1;
+        });
+        
+        let topCat = '-';
+        let max = 0;
+        for (const [cat, count] of Object.entries(categories)) {
+            if (count > max) { max = count; topCat = cat; }
+        }
+        document.getElementById('stat-top-category').textContent = topCat;
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+        
+        chartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories),
+                    backgroundColor: ['#00F0FF', '#5200FF', '#FF3B30', '#34C759', '#FF9500'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#fff' } }
+                }
+            }
+        });
+    }
 
     async function fetchTodos() {
         try {
@@ -161,10 +265,32 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openEditModal = openEditModal;
 
     function renderTodos() {
-        const filteredTodos = todos.filter(todo => {
+        let filteredTodos = todos.filter(todo => {
             if (currentFilter === 'active') return !todo.completed;
             if (currentFilter === 'completed') return todo.completed;
             return true;
+        });
+
+        if (currentSearchTerm) {
+            filteredTodos = filteredTodos.filter(todo => 
+                todo.title.toLowerCase().includes(currentSearchTerm) || 
+                (todo.category && todo.category.toLowerCase().includes(currentSearchTerm))
+            );
+        }
+        
+        filteredTodos.sort((a, b) => {
+            if (currentSortBy === 'newest') return b.id - a.id;
+            if (currentSortBy === 'oldest') return a.id - b.id;
+            if (currentSortBy === 'due-date') {
+                if (!a.due_date) return 1;
+                if (!b.due_date) return -1;
+                return new Date(a.due_date) - new Date(b.due_date);
+            }
+            if (currentSortBy === 'priority') {
+                const p = { 'high': 3, 'medium': 2, 'low': 1 };
+                return (p[b.priority] || 0) - (p[a.priority] || 0);
+            }
+            return 0;
         });
 
         updateStats();
@@ -180,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         todoContainer.innerHTML = filteredTodos.map(todo => `
-            <div class="todo-item ${todo.completed ? 'completed' : ''}">
+            <div class="todo-item priority-${todo.priority} ${todo.completed ? 'completed' : ''}">
                 <div class="todo-content">
                     <label class="checkbox-wrapper">
                         <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleComplete(${todo.id}, ${todo.completed})">

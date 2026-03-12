@@ -16,7 +16,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
 app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
@@ -50,6 +49,9 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     completed = db.Column(db.Boolean, default=False)
+    priority = db.Column(db.String(20), default='medium') # low, medium, high
+    due_date = db.Column(db.DateTime, nullable=True)
+    category = db.Column(db.String(50), default='General')
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -58,12 +60,15 @@ class Todo(db.Model):
             'id': self.id,
             'title': self.title,
             'completed': self.completed,
+            'priority': self.priority,
+            'due_date': self.due_date.strftime('%Y-%m-%d') if self.due_date else None,
+            'category': self.category,
             'date_created': self.date_created.strftime('%Y-%m-%d %H:%M:%S')
         }
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 with app.app_context():
     db.create_all()
@@ -102,8 +107,9 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Registration successful! Please login.')
-        return redirect(url_for('login'))
+        login_user(user) # Auto login after registration
+        flash('Registration successful!')
+        return redirect(url_for('index')) # Redirect to home page
     return render_template('register.html')
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
@@ -170,7 +176,17 @@ def get_todos():
 @login_required
 def add_todo():
     data = request.get_json()
-    new_todo = Todo(title=data['title'], user_id=current_user.id)
+    due_date = None
+    if data.get('due_date'):
+        due_date = datetime.strptime(data['due_date'], '%Y-%m-%d')
+    
+    new_todo = Todo(
+        title=data['title'],
+        priority=data.get('priority', 'medium'),
+        category=data.get('category', 'General'),
+        due_date=due_date,
+        user_id=current_user.id
+    )
     db.session.add(new_todo)
     db.session.commit()
     return jsonify(new_todo.to_dict())
@@ -178,14 +194,21 @@ def add_todo():
 @app.route('/api/todos/<int:todo_id>', methods=['PUT'])
 @login_required
 def update_todo(todo_id):
-    todo = Todo.query.get_or_404(todo_id)
-    if todo.user_id != current_user.id:
+    todo = db.session.get(Todo, todo_id)
+    if not todo or todo.user_id != current_user.id:
         return jsonify({'error': 'Unauthorized'}), 403
     data = request.get_json()
     if 'title' in data:
         todo.title = data['title']
     if 'completed' in data:
         todo.completed = data['completed']
+    if 'priority' in data:
+        todo.priority = data['priority']
+    if 'category' in data:
+        todo.category = data['category']
+    if 'due_date' in data:
+        todo.due_date = datetime.strptime(data['due_date'], '%Y-%m-%d') if data['due_date'] else None
+    
     db.session.commit()
     return jsonify(todo.to_dict())
 

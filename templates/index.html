@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo App</title>
+    <title>Pro Tasks | Ultimate Todo App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="app-title">
-                <i class="fas fa-tasks"></i>
-                <h1>Todo List</h1>
+                <i class="fas fa-check-double"></i>
+                <h1>Pro Tasks</h1>
             </div>
             <div class="user-info">
                 <div class="profile">
@@ -27,12 +28,23 @@
         </div>
 
         <div class="todo-input-container">
-            <div class="input-group">
-                <input type="text" id="todo-input" placeholder=" " autocomplete="off">
-                <label for="todo-input">Add a new task</label>
-                <button id="add-btn" class="add-btn">
-                    <i class="fas fa-plus"></i>
-                </button>
+            <div class="main-input-group">
+                <div class="input-row">
+                    <input type="text" id="todo-input" placeholder="What needs to be done?" autocomplete="off">
+                </div>
+                <div class="details-row">
+                    <select id="priority-select" class="detail-input">
+                        <option value="low">Low Priority</option>
+                        <option value="medium" selected>Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                    <input type="text" id="category-input" placeholder="Category (e.g. Work)" class="detail-input">
+                    <input type="date" id="due-date-input" class="detail-input">
+                    <button id="add-btn" class="add-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Task</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -60,10 +72,35 @@
     <!-- Edit Modal -->
     <div class="modal" id="editModal">
         <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h3>Edit Task</h3>
-            <input type="text" id="edit-input">
-            <button class="save-btn">Save Changes</button>
+            <div class="modal-header">
+                <h3>Edit Task</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Task Title</label>
+                    <input type="text" id="edit-input">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="edit-priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="edit-category">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Due Date</label>
+                    <input type="date" id="edit-due-date">
+                </div>
+                <button class="save-btn">Update Task</button>
+            </div>
         </div>
     </div>
 

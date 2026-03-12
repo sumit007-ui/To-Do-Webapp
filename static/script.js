@@ -1,211 +1,227 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const todoInput = document.getElementById('todo-input');
-    const todoList = document.getElementById('todo-list');
-    const addBtn = document.getElementById('add-btn');
+    const todoForm = document.getElementById('todo-form');
+    const todoContainer = document.getElementById('todo-container');
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const editModal = document.getElementById('editModal');
-    const editInput = document.getElementById('edit-input');
-    const editPriority = document.getElementById('edit-priority');
-    const editCategory = document.getElementById('edit-category');
-    const editDueDate = document.getElementById('edit-due-date');
-    const saveBtn = document.querySelector('.save-btn');
-    const prioritySelect = document.getElementById('priority-select');
-    const categoryInput = document.getElementById('category-input');
-    const dueDateInput = document.getElementById('due-date-input');
+    const statTotal = document.getElementById('stat-total');
+    const statCompleted = document.getElementById('stat-completed');
     
+    // Modal Selectors
+    const editModal = document.getElementById('editModal');
+    const closeModal = document.getElementById('closeModal');
+    const editForm = document.getElementById('edit-form');
+    
+    let todos = [];
     let currentFilter = 'all';
-    let currentEditId = null;
 
-    // Initial fetch
+    // Fetch Initial Todos
     fetchTodos();
 
-    // Add todo
-    addBtn.addEventListener('click', addTodo);
-    todoInput.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') addTodo();
+    todoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('todo-title').value.trim();
+        const priority = document.getElementById('todo-priority').value;
+        const category = document.getElementById('todo-category').value;
+        const dueDate = document.getElementById('todo-due').value;
+
+        if (!title) return;
+
+        const newTodo = {
+            title,
+            priority,
+            category,
+            due_date: dueDate || null
+        };
+
+        try {
+            const res = await fetch('/api/todos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newTodo)
+            });
+            const data = await res.json();
+            todos.unshift(data);
+            todoForm.reset();
+            renderTodos();
+        } catch (error) {
+            console.error('Error adding todo:', error);
+        }
     });
 
-    // Filter todos
+    // Close Modal
+    closeModal.addEventListener('click', () => {
+        editModal.classList.remove('show');
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === editModal) {
+            editModal.classList.remove('show');
+        }
+    });
+
+    // Edit Form submit
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-id').value;
+        const title = document.getElementById('edit-title').value.trim();
+        const priority = document.getElementById('edit-priority').value;
+        const category = document.getElementById('edit-category').value;
+        const dueDate = document.getElementById('edit-due').value;
+
+        if (!title) return;
+
+        try {
+            const res = await fetch(`/api/todos/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title,
+                    priority,
+                    category,
+                    due_date: dueDate || null
+                })
+            });
+            const updatedTodo = await res.json();
+            todos = todos.map(todo => todo.id === updatedTodo.id ? updatedTodo : todo);
+            editModal.classList.remove('show');
+            renderTodos();
+        } catch (error) {
+            console.error('Error updating todo:', error);
+        }
+    });
+
+    // Filtering
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             filterBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.dataset.filter;
-            fetchTodos();
+            renderTodos();
         });
     });
 
-    // Modal handling
-    document.querySelector('.close-btn').addEventListener('click', closeModal);
-    window.addEventListener('click', (e) => {
-        if(e.target === editModal) closeModal();
-    });
-    saveBtn.addEventListener('click', saveEdit);
-
     async function fetchTodos() {
         try {
-            const response = await fetch('/api/todos');
-            const todos = await response.json();
-            renderTodos(todos);
+            const res = await fetch('/api/todos');
+            todos = await res.json();
+            renderTodos();
         } catch (error) {
             console.error('Error fetching todos:', error);
         }
     }
 
-    async function addTodo() {
-        const text = todoInput.value.trim();
-        if(text === '') {
-            todoInput.classList.add('error');
-            setTimeout(() => todoInput.classList.remove('error'), 500);
-            return;
-        }
-        
-        const data = {
-            title: text,
-            priority: prioritySelect.value,
-            category: categoryInput.value || 'General',
-            due_date: dueDateInput.value || null
-        };
-
+    async function toggleComplete(id, currentStatus) {
         try {
-            const response = await fetch('/api/todos', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if(response.ok) {
-                todoInput.value = '';
-                categoryInput.value = '';
-                dueDateInput.value = '';
-                fetchTodos();
-            }
-        } catch (error) {
-            console.error('Error adding todo:', error);
-        }
-    }
-
-    async function toggleComplete(id, completed) {
-        try {
-            await fetch(`/api/todos/${id}`, {
+            const res = await fetch(`/api/todos/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ completed: !completed })
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ completed: !currentStatus })
             });
-            fetchTodos();
+            const updatedTodo = await res.json();
+            todos = todos.map(todo => todo.id === updatedTodo.id ? updatedTodo : todo);
+            renderTodos();
         } catch (error) {
             console.error('Error toggling complete:', error);
         }
     }
 
     async function deleteTodo(id) {
-        // Removed confirm() for direct deletion as requested
         try {
-            const response = await fetch(`/api/todos/${id}`, {
+            await fetch(`/api/todos/${id}`, {
                 method: 'DELETE'
             });
-            if(response.ok) {
-                fetchTodos();
-            }
+            todos = todos.filter(todo => todo.id !== id);
+            renderTodos();
         } catch (error) {
             console.error('Error deleting todo:', error);
         }
     }
 
-    function openEditModal(todo) {
-        currentEditId = todo.id;
-        editInput.value = todo.title;
-        editPriority.value = todo.priority;
-        editCategory.value = todo.category;
-        editDueDate.value = todo.due_date || '';
-        editModal.style.display = 'flex';
+    function openEditModal(id) {
+        const todo = todos.find(t => t.id === id);
+        if (!todo) return;
+        
+        document.getElementById('edit-id').value = todo.id;
+        document.getElementById('edit-title').value = todo.title;
+        document.getElementById('edit-priority').value = todo.priority;
+        document.getElementById('edit-category').value = todo.category || 'General';
+        document.getElementById('edit-due').value = todo.due_date || '';
+        
+        editModal.classList.add('show');
     }
 
-    async function saveEdit() {
-        const data = {
-            title: editInput.value.trim(),
-            priority: editPriority.value,
-            category: editCategory.value,
-            due_date: editDueDate.value || null
-        };
+    // Making functions globally available for inline onclick
+    window.toggleComplete = toggleComplete;
+    window.deleteTodo = deleteTodo;
+    window.openEditModal = openEditModal;
 
-        try {
-            const response = await fetch(`/api/todos/${currentEditId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            if(response.ok) {
-                fetchTodos();
-                closeModal();
-            }
-        } catch (error) {
-            console.error('Error saving edit:', error);
-        }
-    }
-
-    function closeModal() {
-        editModal.style.display = 'none';
-        currentEditId = null;
-    }
-
-    function renderTodos(todos) {
-        todoList.innerHTML = '';
+    function renderTodos() {
         const filteredTodos = todos.filter(todo => {
-            if(currentFilter === 'active') return !todo.completed;
-            if(currentFilter === 'completed') return todo.completed;
+            if (currentFilter === 'active') return !todo.completed;
+            if (currentFilter === 'completed') return todo.completed;
             return true;
         });
 
-        if(filteredTodos.length === 0) {
-            todoList.innerHTML = `
+        updateStats();
+
+        if (filteredTodos.length === 0) {
+            todoContainer.innerHTML = `
                 <div class="empty-state">
-                    <i class="fas fa-clipboard-list"></i>
-                    <p>No tasks found</p>
+                    <i class="fas fa-clipboard-check"></i>
+                    <p>No tasks found. ${currentFilter === 'all' ? 'Add your first task above!' : 'Try a different filter.'}</p>
                 </div>
             `;
             return;
         }
 
-        filteredTodos.forEach(todo => {
-            const todoItem = document.createElement('div');
-            todoItem.className = `todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority}`;
-            todoItem.innerHTML = `
-                <button class="complete-btn action-btn">
-                    <i class="fas fa-${todo.completed ? 'check-circle' : 'circle'}"></i>
-                </button>
+        todoContainer.innerHTML = filteredTodos.map(todo => `
+            <div class="todo-item ${todo.completed ? 'completed' : ''}">
                 <div class="todo-content">
-                    <span class="todo-text">${todo.title}</span>
-                    <div class="todo-meta">
-                        <span class="category-tag"><i class="fas fa-tag"></i> ${todo.category}</span>
-                        ${todo.due_date ? `<span class="due-date"><i class="fas fa-calendar"></i> ${todo.due_date}</span>` : ''}
-                        <span class="priority-badge">${todo.priority}</span>
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleComplete(${todo.id}, ${todo.completed})">
+                        <span class="checkmark"><i class="fas fa-check"></i></span>
+                    </label>
+                    <div class="todo-text">
+                        <div class="todo-title">${escapeHTML(todo.title)}</div>
+                        <div class="todo-meta">
+                            <span class="badge badge-${todo.priority}">${todo.priority}</span>
+                            <span class="badge badge-category">${escapeHTML(todo.category || 'General')}</span>
+                            ${todo.due_date ? `<span><i class="far fa-calendar-alt"></i> ${todo.due_date}</span>` : ''}
+                        </div>
                     </div>
                 </div>
                 <div class="todo-actions">
-                    <button class="edit-btn action-btn" title="Edit">
-                        <i class="fas fa-edit"></i>
+                    <button class="action-btn" onclick="openEditModal(${todo.id})" title="Edit Task">
+                        <i class="fas fa-pen"></i>
                     </button>
-                    <button class="delete-btn action-btn" title="Delete">
+                    <button class="action-btn delete" onclick="deleteTodo(${todo.id})" title="Delete Task">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-            `;
-            
-            todoItem.querySelector('.complete-btn').onclick = () => toggleComplete(todo.id, todo.completed);
-            todoItem.querySelector('.edit-btn').onclick = () => openEditModal(todo);
-            todoItem.querySelector('.delete-btn').onclick = () => deleteTodo(todo.id);
-            
-            todoList.appendChild(todoItem);
-        });
-
-        updateStats(todos);
+            </div>
+        `).join('');
     }
 
-    function updateStats(todos) {
-        document.getElementById('total-tasks').textContent = 
-            `${todos.length} ${todos.length === 1 ? 'task' : 'tasks'}`;
-        const completed = todos.filter(todo => todo.completed).length;
-        document.getElementById('completed-tasks').textContent = 
-            `${completed} completed`;
+    function updateStats() {
+        statTotal.textContent = `${todos.length} items`;
+        const completedCount = todos.filter(t => t.completed).length;
+        statCompleted.textContent = `${completedCount} completed`;
+    }
+
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, 
+            tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag])
+        );
     }
 });

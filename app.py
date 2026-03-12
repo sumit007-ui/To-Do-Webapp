@@ -1,43 +1,27 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_mail import Mail, Message
 from datetime import datetime
 import os
 from dotenv import load_dotenv
-import secrets
 from werkzeug.security import generate_password_hash, check_password_hash
-import smtplib
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todo.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
-
-# Check if email configuration is complete
-if not all([app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD']]):
-    print("Warning: Email configuration is incomplete. Password reset functionality will not work.")
-    print("Please set MAIL_USERNAME and MAIL_PASSWORD in your .env file")
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-mail = Mail(app)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     todos = db.relationship('Todo', backref='user', lazy=True)
-    reset_token = db.Column(db.String(100), unique=True)
-    reset_token_expiry = db.Column(db.DateTime)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -112,53 +96,7 @@ def register():
         return redirect(url_for('index')) # Redirect to home page
     return render_template('register.html')
 
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            try:
-                token = secrets.token_urlsafe(32)
-                user.reset_token = token
-                user.reset_token_expiry = datetime.utcnow()
-                db.session.commit()
-                
-                msg = Message('Password Reset Request',
-                            recipients=[email])
-                msg.body = f'''To reset your password, visit the following link:
-{url_for('reset_password', token=token, _external=True)}
-This link will expire in 1 hour.
-'''
-                mail.send(msg)
-                flash('Password reset email sent!')
-            except smtplib.SMTPAuthenticationError:
-                flash('Email configuration error. Please contact the administrator.')
-                print("SMTP Authentication Error: Check your email credentials in .env file")
-            except Exception as e:
-                flash('Error sending email. Please try again later.')
-                print(f"Email Error: {str(e)}")
-        else:
-            flash('Email not found')
-    return render_template('forgot_password.html')
 
-@app.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
-    user = User.query.filter_by(reset_token=token).first()
-    if not user or user.reset_token_expiry < datetime.utcnow():
-        flash('Invalid or expired token')
-        return redirect(url_for('forgot_password'))
-    
-    if request.method == 'POST':
-        password = request.form.get('password')
-        user.set_password(password)
-        user.reset_token = None
-        user.reset_token_expiry = None
-        db.session.commit()
-        flash('Password has been reset!')
-        return redirect(url_for('login'))
-    
-    return render_template('reset_password.html', token=token)
 
 @app.route('/logout')
 @login_required

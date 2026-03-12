@@ -3,104 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Tasks | Ultimate Todo App</title>
+    <title>Dashboard - Pro Tasks</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="app-title">
+    <div class="app-container">
+        <header class="app-header">
+            <div class="app-logo">
                 <i class="fas fa-check-double"></i>
-                <h1>Pro Tasks</h1>
+                <span>Pro Tasks</span>
             </div>
-            <div class="user-info">
-                <div class="profile">
-                    <i class="fas fa-user-circle"></i>
-                    <span>{{ current_user.email }}</span>
-                </div>
+            <div class="user-profile">
+                <span class="user-email"><i class="fas fa-user-circle"></i> {{ current_user.email }}</span>
                 <a href="{{ url_for('logout') }}" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </div>
-        </div>
+        </header>
 
-        <div class="todo-input-container">
-            <div class="main-input-group">
-                <div class="input-row">
-                    <input type="text" id="todo-input" placeholder="What needs to be done?" autocomplete="off">
+        <main>
+            <!-- Add Todo Card -->
+            <div class="entry-card glass">
+                <form id="todo-form">
+                    <div class="main-input-wrapper">
+                        <input type="text" id="todo-title" placeholder="What needs to be done?" required autocomplete="off">
+                        <button type="submit" class="add-btn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    <div class="entry-options">
+                        <select id="todo-priority" class="styled-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                        <select id="todo-category" class="styled-select">
+                            <option value="General">General</option>
+                            <option value="Work">Work</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Shopping">Shopping</option>
+                        </select>
+                        <input type="date" id="todo-due" class="styled-date">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Toolbar (Stats & Filters) -->
+            <div class="toolbar">
+                <div class="stats">
+                    <span id="stat-total">0 items</span>
+                    <span id="stat-completed">0 completed</span>
                 </div>
-                <div class="details-row">
-                    <select id="priority-select" class="detail-input">
-                        <option value="low">Low Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="high">High Priority</option>
-                    </select>
-                    <input type="text" id="category-input" placeholder="Category (e.g. Work)" class="detail-input">
-                    <input type="date" id="due-date-input" class="detail-input">
-                    <button id="add-btn" class="add-btn">
-                        <i class="fas fa-plus"></i>
-                        <span>Add Task</span>
-                    </button>
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="active">Active</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
                 </div>
             </div>
-        </div>
 
-        <div class="todo-controls">
-            <div class="stats">
-                <span id="total-tasks">0 tasks</span>
-                <span id="completed-tasks">0 completed</span>
+            <!-- Todo List -->
+            <div class="todo-list" id="todo-container">
+                <!-- Items inject here -->
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <p>No tasks found. Add your first task above!</p>
+                </div>
             </div>
-            <div class="filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="active">Active</button>
-                <button class="filter-btn" data-filter="completed">Completed</button>
-            </div>
-        </div>
-
-        <div class="todo-list" id="todo-list">
-            <!-- Todos will be added here dynamically -->
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>No tasks found. Add your first task!</p>
-            </div>
-        </div>
+        </main>
     </div>
 
     <!-- Edit Modal -->
     <div class="modal" id="editModal">
-        <div class="modal-content">
+        <div class="modal-content glass">
             <div class="modal-header">
                 <h3>Edit Task</h3>
-                <span class="close-btn">&times;</span>
+                <button class="close-btn" id="closeModal">&times;</button>
             </div>
-            <div class="modal-body">
+            <form id="edit-form">
+                <input type="hidden" id="edit-id">
                 <div class="form-group">
                     <label>Task Title</label>
-                    <input type="text" id="edit-input">
+                    <input type="text" id="edit-title" class="styled-input" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Priority</label>
-                        <select id="edit-priority">
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Category</label>
-                        <input type="text" id="edit-category">
-                    </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="edit-priority" class="styled-select">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="edit-category" class="styled-select">
+                        <option value="General">General</option>
+                        <option value="Work">Work</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Shopping">Shopping</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Due Date</label>
-                    <input type="date" id="edit-due-date">
+                    <input type="date" id="edit-due" class="styled-date">
                 </div>
-                <button class="save-btn">Update Task</button>
-            </div>
+                <button type="submit" class="styled-btn" style="margin-top: 1rem;">Update Task</button>
+            </form>
         </div>
     </div>
 

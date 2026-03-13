@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced To-Do Web Application PDF Project</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Times+New+Roman:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* Warm, Professional & Simple Academic colors */
+            --primary: #800000;       /* Classic Maroon for headings */
+            --secondary: #003366;     /* Navy Blue for sub-headings */
+            --accent: #E5A91E;        /* Subtle Gold accent */
+            --text-primary: #1C1C1C;  /* Very dark grey for text */
+            --text-secondary: #4A4A4A;
+            --bg-body: #E9ECEF;       /* Soft light grey outside pages */
+            
+            /* A4 Dimensions */
+            --a4-width: 210mm;
+            --a4-height: 297mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* Clean minimal background */
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* -------------------------------------------
+           CLEAN FLOATING MENU
+        ------------------------------------------- */
+        .print-actions {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            text-align: center;
+            width: 300px;
+        }
+
+        .print-actions h3 {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary);
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5C0000;
+        }
+
+        .hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* -------------------------------------------
+           DOCUMENT STYLING
+        ------------------------------------------- */
+        .report-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 0;
+            gap: 50px; /* Space between A4 pages */
+        }
+
+        .a4-page {
+            width: var(--a4-width);
+            height: var(--a4-height);
+            background: white;
+            /* Simple crisp shadow */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 25mm 20mm; 
+            position: relative;
+            page-break-after: always;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* Simple Elegant Borders */
+        .page-border {
+            border: 3px double #333; /* Classic academic border */
+            height: 100%;
+            padding: 15mm;
+            position: relative;
+        }
+
+        .page-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* -------------------------------------------
+           TYPOGRAPHY & ELEMENTS
+        ------------------------------------------- */
+        h1, h2, h3, h4, th {
+            font-family: 'Times New Roman', Times, serif;
+            font-weight: bold;
+            color: var(--primary); /* Apply Maroon to all headings */
+        }
+
+        p {
+            font-size: 18px; /* Slightly larger for easier reading */
+            text-align: justify;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        ul {
+            padding-left: 35px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        li {
+            font-size: 18px;
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+
+        .text-center { text-align: center; }
+        .mt-40 { margin-top: 40px; }
+
+        /* Clean Section Headers */
+        .chapter-title, .section-heading {
+            font-size: 26px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+            color: var(--secondary); /* Navy blue for module titles */
+            text-transform: uppercase;
+            text-align: center; /* Center alignment looks very neat for projects */
+        }
+
+        .text-body p {
+            text-indent: 50px; /* Proper paragraph indent */
+            line-height: 1.8;
+        }
+
+        /* === Front Cover Styling === */
+        .institute-header {
+            margin-top: 20px;
+        }
+
+        .institute-header h2 {
+            font-size: 22px;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .project-title {
+            font-size: 38px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            color: var(--primary);
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+            padding: 20px;
+            border: 2px solid var(--primary);
+            background-color: #FFF9E6; /* Slight cream background for title */
+        }
+
+        .submitted-text {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-style: italic;
+            text-align: center;
+            text-indent: 0 !important;
+        }
+
+        .degree {
+            font-size: 26px;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        
+        .branch {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            color: var(--text-primary);
+        }
+
+        .circle-logo {
+            width: 150px;
+            height: 150px;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 70px;
+            color: var(--primary);
+            margin: 40px auto;
+            background: white;
+            box-shadow: inset 0 0 15px rgba(128,0,0,0.1);
+        }
+
+        .submission-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        
+        .submitted-by {
+            text-align: left;
+            padding-left: 20px;
+        }
+
+        .submitted-to {
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .submission-grid h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        .college-footer {
+            width: 100%;
+            border-top: 3px solid var(--primary);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .college-footer h2 {
+            color: var(--secondary);
+            font-size: 22px;
+        }
+
+        .college-name {
+            font-size: 32px;
+            margin: 10px 0;
+            color: var(--primary);
+            letter-spacing: 1.5px;
+        }
+
+        .college-address, .academic-year {
+            font-size: 18px;
+            color: var(--text-primary);
+            text-indent: 0 !important;
+            text-align: center;
+        }
+
+        /* === Tables === */
+        .index-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+            border: 2px solid var(--text-primary);
+        }
+
+        .index-table th, .index-table td {
+            border: 1px solid var(--text-primary);
+            padding: 15px;
+            font-size: 20px;
+        }
+
+        .index-table th {
+            background-color: var(--secondary);
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .index-table td:nth-child(1) {
+            text-align: center;
+            width: 15%;
+            font-weight: bold;
+        }
+
+        /* === Signatures === */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 100px;
+            padding: 0 30px;
+        }
+
+        .sign-box {
+            text-align: center;
+        }
+
+        .sign-line {
+            width: 250px;
+            height: 2px;
+            background: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        /* === Visual Accents in Document === */
+        .diagram-box {
+            margin: 40px auto;
+            border: 2px solid var(--secondary);
+            background: #F8F9FA;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .diagram-box h3 { color: var(--secondary); margin-bottom: 15px; }
+
+        pre {
+            background: #F8F9FA;
+            border: 1px solid #CCC;
+            border-left: 5px solid var(--primary);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 1.6em;
+            max-width: 100%;
+            overflow: auto;
+            padding: 1.5em;
+        }
+
+        /* -------------------------------------------
+           PRINT CSS FIXES (CRITICAL FOR PDF)
+        ------------------------------------------- */
+        @media print {
+            body {
+                background: white;
+            }
+            .print-actions {
+                display: none !important;
+            }
+            .report-container {
+                padding: 0;
+                gap: 0;
+            }
+            .a4-page {
+                box-shadow: none !important;
+                margin: 0;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Simple Professional Floating Action Button -->
+    <div class="print-actions" data-html2canvas-ignore="true">
+        <h3>Assignment Generator</h3>
+        <button class="btn btn-primary" id="btn-download">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF
+        </button>
+        <p class="hint">Clean & Professional Design</p>
+    </div>
+
+    <!-- The Entire Report Document -->
+    <div class="report-container" id="report-document">
+
+        <!-- ================= PAGE 1 : COVER PAGE ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content center-content">
+                    <div class="institute-header">
+                        <h2>A PROJECT REPORT ON</h2>
+                        <h1 class="project-title">"Advanced To-Do Web Application"</h1>
+                        <p class="submitted-text">Submitted in partial fulfillment of the requirements for the award of the degree of</p>
+                        <h3 class="degree">Bachelor of Technology</h3>
+                        <p class="branch">in Computer Science and Engineering</p>
+                    </div>
+
+                    <div class="logo-placeholder">
+                        <div class="circle-logo">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                    </div>
+
+                    <div class="submission-grid">
+                        <div class="submitted-by">
+                            <h4>Submitted By:</h4>
+                            <p><strong>[Your Name Here]</strong></p>
+                            <p>Roll No: [Your Roll No]</p>
+                            <p>Semester: 6th Sem</p>
+                        </div>
+                        <div class="submitted-to">
+                            <h4>Supervised By:</h4>
+                            <p><strong>Prof. [Guide Name here]</strong></p>
+                            <p>Department of CSE</p>
+                        </div>
+                    </div>
+
+                    <div class="college-footer">
+                        <h2>DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING</h2>
+                        <h1 class="college-name">[COLLEGE/UNIVERSITY NAME HERE]</h1>
+                        <p class="college-address">[City, State, Pincode]</p>
+                        <p class="academic-year">Academic Year: 2025-2026</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2 : CERTIFICATE ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="section-heading">CERTIFICATE</h1>
+                    <div class="certificate-body mt-40">
+                        <p>This is to certify that the project report entitled <strong>"Advanced To-Do Web Application"</strong> being submitted by <strong>[Your Name Here]</strong> (Roll No: [Your Roll No]) in partial fulfillment for the award of the Degree of Bachelor of Technology in Computer Science and Engineering is a record of bona fide work carried out by them under my guidance and supervision.</p>
+                        <p>The results embodied in this project report have not been submitted to any other University or Institute for the award of any degree or diploma.</p>
+                        
+                        <div class="signatures">
+                            <div class="sign-box">
+                                <div class="sign-line"></div>
+                                <p><strong>Prof. [Guide Name here]</strong></p>
+                                <p>Project Guide</p>
+                            </div>
+                            <div class="sign-box">
+                                <div class="sign-line"></div>
+                                <p><strong>Prof. [HOD Name here]</strong></p>
+                                <p>Head of Department</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3 : ACKNOWLEDGEMENT & ABSTRACT ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">ACKNOWLEDGEMENT</h1>
+                    <div class="text-body" style="flex:0.5;">
+                        <p>I would like to express my profound gratitude and deep regards to my guide <strong>Prof. [Guide Name here]</strong> for his/her exemplary guidance, monitoring, and constant encouragement throughout the course of this project.</p>
+                        <p>Lastly, I thank almighty, my parents, friends, and the college administration for their constant encouragement without which this assignment would not be possible.</p>
+                    </div>
+                    
+                    <h1 class="chapter-title mt-40">ABSTRACT</h1>
+                    <div class="text-body">
+                        <p>In our fast-paced daily lives, managing tasks effectively is essential for productivity. The "Advanced To-Do Web Application" aims to provide an intuitive and efficient way for users to record, organize, and monitor their day-to-day activities. </p>
+                        <p>Unlike basic to-do lists, this application is a full-stack web project built using Python's Flask framework for the backend, and HTML, CSS, and Vanilla JavaScript for the frontend. The application features a robust authentication system allowing multiple users to register, log in, and securely manage their own tasks. Data is persistently stored using a relational SQLite database via the SQLAlchemy Object Relational Mapper (ORM).</p>
+                        <p>Users can add tasks with priorities, assign due dates, categorize tasks, and mark them as complete. The seamless RESTful API architecture ensures smooth data transactions between the client UI and the server.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 4 : INDEX ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="section-heading">TABLE OF CONTENTS</h1>
+                    <table class="index-table">
+                        <tr><th>Sr. No.</th><th>Title</th></tr>
+                        <tr><td>1</td><td>Introduction</td></tr>
+                        <tr><td>2</td><td>Review of Literature</td></tr>
+                        <tr><td>3</td><td>System Architecture</td></tr>
+                        <tr><td>4</td><td>Technologies Used</td></tr>
+                        <tr><td>5</td><td>Methodology & Implementation</td></tr>
+                        <tr><td>6</td><td>Database Design</td></tr>
+                        <tr><td>7</td><td>System Testing</td></tr>
+                        <tr><td>8</td><td>Conclusion & Future Scope</td></tr>
+                        <tr><td>9</td><td>Appendix (Source Code Snippets)</td></tr>
+                        <tr><td>10</td><td>References</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 5 : CH 1 & 2 ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">1. INTRODUCTION</h1>
+                    <div class="text-body">
+                        <p>A To-Do List application is a complex piece of software that can be used to manage personal and professional workloads. The primary objective is to keep track of tasks that need to be accomplished, ensuring nothing is forgotten. While traditional pen and paper methods are helpful, they lack the dynamism of modern software—such as reminders, categories, priorities, and accessibility from multiple devices.</p>
+                        <p>This project modernizes task management by bringing it to the web. It uses a secure authentication system, ensuring user data remains private. The web application allows seamless CRUD (Create, Read, Update, Delete) operations, making it highly interactive.</p>
+                    </div>
+
+                    <h1 class="chapter-title mt-40">2. REVIEW OF LITERATURE</h1>
+                    <div class="text-body">
+                        <p>Existing task management tools range from simple sticky notes applications to complex Kanban boards. Common solutions like Microsoft To Do or Todoist offer robust features but are proprietary. Developing a custom web-based solution allows for understanding the core mechanisms of web programming, REST APIs, and database interactions.</p>
+                        <p>By studying related web apps, this project implements necessary features like Due Date tracking and Priority flags, offering all standard tools in a minimalist interface.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 6 : CH 3 & 4 ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">3. SYSTEM ARCHITECTURE</h1>
+                    <div class="text-body">
+                        <p>The Advanced To-Do Web Application adapts a standard MVC approach where the logic represents the core functionality of task scheduling and User models.</p>
+                        <div class="diagram-box">
+                            <h3><i class="fa-solid fa-sitemap"></i> Fig 3.1: System Flow Diagram</h3>
+                            <p style="text-indent: 0; text-align: center; font-family: 'Courier New', monospace; font-size: 16px;">[ Frontend UI ] <strong style="color:var(--primary)">⟷</strong> [ Python Flask API ] <strong style="color:var(--primary)">⟷</strong> [ SQLite Database ]</p>
+                        </div>
+                    </div>
+
+                    <h1 class="chapter-title mt-40">4. TECHNOLOGIES USED</h1>
+                    <div class="text-body">
+                        <ul>
+                            <li><strong>Frontend (Client Side):</strong>
+                                <ul>
+                                    <li>HTML5: Provides the structural markup.</li>
+                                    <li>CSS3 (Vanilla): Enhances the visual layout.</li>
+                                    <li>JavaScript (ES6): Asynchronous API requests (Fetch API).</li>
+                                </ul>
+                            </li>
+                            <li><strong>Backend (Server Side):</strong>
+                                <ul>
+                                    <li>Python 3.x: Core programming.</li>
+                                    <li>Flask: Web application framework.</li>
+                                    <li>Flask-Login: User session management.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Database:</strong>
+                                <ul>
+                                    <li>SQLite: Disk-based database.</li>
+                                    <li>Flask-SQLAlchemy: ORM support.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 7 : CH 5 & 6 ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">5. METHODOLOGY & IMPLEMENTATION</h1>
+                    <div class="text-body">
+                        <p>The system was built iteratively. Phase 1 involved database schema design using SQLAlchemy models. Phase 2 handled the backend Flask routes for User Registration/Login and To-Do CRUD APIs. Phase 3 focused on creating the frontend UI templates to communicate with the APIs.</p>
+                    </div>
+
+                    <h1 class="chapter-title mt-40">6. DATABASE DESIGN</h1>
+                    <div class="text-body">
+                        <p>The system uses relational tables linked by foreign keys (User ID).</p>
+                        
+                        <h3 style="margin-top: 15px;"><i class="fa-solid fa-database"></i> Table: User</h3>
+                        <ul>
+                            <li><strong>id:</strong> (INTEGER, Primary Key)</li>
+                            <li><strong>email:</strong> (VARCHAR, Unique)</li>
+                            <li><strong>password_hash:</strong> (VARCHAR)</li>
+                        </ul>
+
+                        <h3 style="margin-top: 15px;"><i class="fa-solid fa-list-check"></i> Table: Todo</h3>
+                        <ul>
+                            <li><strong>id:</strong> (INTEGER, Primary Key)</li>
+                            <li><strong>title:</strong> (VARCHAR)</li>
+                            <li><strong>completed:</strong> (BOOLEAN)</li>
+                            <li><strong>priority:</strong> (VARCHAR: low, medium, high)</li>
+                            <li><strong>user_id:</strong> (INTEGER, Foreign Key to User.id)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ================= PAGE 8 : CH 7 & 8 ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">7. SYSTEM TESTING</h1>
+                    <div class="text-body">
+                        <p>The system underwent rigorous boundary testing. Manual testing cases included:</p>
+                        <ul>
+                            <li><strong>Authentication Testing:</strong> Verified that unauthorized users get redirected to the login page when trying to access <code>/api/todos</code>.</li>
+                            <li><strong>CRUD Operations:</strong> Verified tasks can be accurately added, modified, and deleted without page refreshes.</li>
+                            <li><strong>Database Integrity:</strong> Verified foreign key constraints prevent orphaned task rows when an account is managed.</li>
+                        </ul>
+                    </div>
+
+                    <h1 class="chapter-title mt-40">8. CONCLUSION & FUTURE SCOPE</h1>
+                    <div class="text-body">
+                        <p>The project successfully demonstrates the integration of full-stack logic. The ORM effectively mitigates SQL Injection vulnerabilities found in standard applications. In the future, this application can be scaled to include Push Notifications, Multi-user Task Sharing, and real-time collaboration features to rival commercial task-manager products.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 9 : APPENDIX ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">9. APPENDIX (SOURCE CODE)</h1>
+                    <div class="text-body">
+                        <p><strong>app.py (Flask Backend Route Example)</strong></p>
+<pre>
+@app.route('/api/todos', methods=['POST'])
+@login_required
+def add_todo():
+    data = request.get_json()
+    new_todo = Todo(
+        title=data['title'],
+        priority=data.get('priority', 'medium'),
+        user_id=current_user.id
+    )
+    db.session.add(new_todo)
+    db.session.commit()
+    return jsonify(new_todo.to_dict())
+</pre>
+                        <p><strong>Models Definition Example (SQLAlchemy)</strong></p>
+<pre>
+class Todo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 10 : REFERENCES ================= -->
+        <div class="a4-page">
+            <div class="page-border">
+                <div class="page-content">
+                    <h1 class="chapter-title">10. REFERENCES</h1>
+                    <div class="text-body mt-40">
+                        <ul>
+                            <li>Flask Web Development Documentation, <em>Available at: https://flask.palletsprojects.com/</em></li>
+                            <li>Flask-SQLAlchemy Extension Documentation, <em>Available at: https://flask-sqlalchemy.palletsprojects.com/</em></li>
+                            <li>MDN Web Docs (Comprehensive HTML, CSS, JS Guides), <em>Available at: https://developer.mozilla.org/</em></li>
+                            <li>Python Software Foundation Official Documentation 3.x, <em>Available at: https://docs.python.org/3/</em></li>
+                            <li>REST API Design Guidelines, Mozilla Developer Network.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const btnDownload = document.getElementById('btn-download');
+            
+            btnDownload.addEventListener('click', () => {
+                const element = document.getElementById('report-document');
+                
+                const opt = {
+                    margin:       0,
+                    filename:     'To-Do-App-Project-Report.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { 
+                        scale: 2, 
+                        useCORS: true, 
+                        letterRendering: true, 
+                        windowWidth: 794 // Accurate A4 equivalent at 96 DPI
+                    }, 
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak:    { mode: 'css', before: '.a4-page' }
+                };
+
+                const originalText = btnDownload.innerHTML;
+                btnDownload.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
+                btnDownload.disabled = true;
+
+                document.body.style.background = 'white';
+
+                html2pdf().from(element).set(opt).save().then(() => {
+                    btnDownload.innerHTML = originalText;
+                    btnDownload.disabled = false;
+                    document.body.style.background = '#E9ECEF';
+                }).catch(err => {
+                    console.error("PDF Generation Failed: ", err);
+                    btnDownload.innerHTML = originalText;
+                    btnDownload.disabled = false;
+                    document.body.style.background = '#E9ECEF';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

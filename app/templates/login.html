@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER — Access flow Chamber</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="luxury-dark auth-page-layout">
+    <!-- Noise overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Mouse reactive custom glow follower -->
+    <div class="cursor-glow" id="auth-cursor-glow-id"></div>
+
+    <div class="auth-wrapper glass fade-up-reveal">
+        <!-- Marketing split screen panel -->
+        <div class="auth-marketing-panel">
+            <div class="marketing-header">
+                <div class="brand-monogram">Æ</div>
+                <span class="brand-text" style="color: var(--accent-light); font-weight:700; letter-spacing:0.12rem;">AETHER</span>
+            </div>
+            <div class="marketing-body" style="margin-top: 4rem;">
+                <h1 class="marketing-title" style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--accent-light); line-height: 1.25; font-weight: 800; text-shadow: 0 4px 12px rgba(0,0,0,0.6);">Elevate focus to a cinematic art form.</h1>
+                <p class="marketing-desc" style="color: var(--accent-sand); font-size: 0.95rem; line-height: 1.6; margin-top: 1rem; text-shadow: 0 2px 6px rgba(0,0,0,0.6);">Experience a state-of-the-art workspace engineered with adaptive AI intelligence, smooth spatial interactions, and modular grids.</p>
+            </div>
+            <div class="marketing-footer" style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span class="marketing-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Powered</span>
+                <span style="font-size:0.75rem; color: var(--accent-earth);">v2.0 Cinematic Slate</span>
+            </div>
+        </div>
+
+        <div class="auth-card" id="auth-login-card-id">
+            <div class="auth-header">
+                <h1 class="auth-title">Welcome to Aether</h1>
+                <p class="auth-subtitle">Enter your workspace credentials to initialize flow.</p>
+            </div>
+
+            <!-- Display Flash Messages -->
+            <div class="auth-alerts-container" id="auth-alerts-container-id"></div>
+
+            <form id="api-login-form" class="auth-form">
+                <div class="form-group-item">
+                    <label for="login-email">Workspace Email</label>
+                    <div class="input-wrapper-glow">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="login-email" class="custom-glass-input" required placeholder="name@company.com" autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group-item">
+                    <label for="login-password">Chamber Keycode</label>
+                    <div class="input-wrapper-glow">
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <input type="password" id="login-password" class="custom-glass-input" required placeholder="••••••••••••" autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" class="magnetic-btn luxury-btn-primary auth-submit-btn" id="login-submit-btn-id">
+                    <span>Initialize Session</span> <i class="fa-solid fa-circle-notch fa-spin btn-spinner" style="display: none;"></i>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>New to the workspace? <a href="/register" class="auth-link">Establish Credentials</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GSAP for smooth interactive reveals -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // GSAP stagger entry reveal
+            gsap.fromTo(".fade-up-reveal", 
+                { opacity: 0, y: 50, scale: 0.95 },
+                { opacity: 1, y: 0, scale: 1, duration: 1.6, ease: "power4.out" }
+            );
+
+            // Glow tracking
+            const glow = document.getElementById('auth-cursor-glow-id');
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(glow, {
+                    x: e.clientX - 250,
+                    y: e.clientY - 250,
+                    duration: 0.6,
+                    ease: "power2.out"
+                });
+            });
+
+            // Handle Login Form Submit via API
+            const form = document.getElementById('api-login-form');
+            const alertsContainer = document.getElementById('auth-alerts-container-id');
+            const spinner = form.querySelector('.btn-spinner');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                spinner.style.display = 'inline-block';
+                alertsContainer.innerHTML = '';
+
+                const email = document.getElementById('login-email').value.trim();
+                const password = document.getElementById('login-password').value;
+
+                try {
+                    const res = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                        // Successful login: Redirect to dashboard with a page scale transition
+                        gsap.to(".auth-wrapper", {
+                            opacity: 0,
+                            scale: 0.95,
+                            y: -30,
+                            duration: 0.8,
+                            ease: "power3.inOut",
+                            onComplete: () => {
+                                window.location.href = '/';
+                            }
+                        });
+                    } else {
+                        throw new Error(data.error || 'Connection failed.');
+                    }
+                } catch (error) {
+                    spinner.style.display = 'none';
+                    alertsContainer.innerHTML = `
+                        <div class="auth-alert glass error">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>${error.message}</span>
+                        </div>
+                    `;
+                    gsap.from(".auth-alert", { y: -10, opacity: 0, duration: 0.4 });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

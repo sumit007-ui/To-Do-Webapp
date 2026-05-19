@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER — Cinematic Productivity Space</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Syne:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Styling -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="luxury-dark {{ 'light-theme' if g.user and g.user.theme_preference == 'light' else '' }}">
+    <!-- Noise Grain Overlay -->
+    <div class="noise-overlay" id="noise-overlay-id"></div>
+
+    <!-- Mouse Reactive Custom Glow Follower -->
+    <div class="cursor-glow" id="custom-cursor-glow-id"></div>
+    <div class="cursor-dot" id="custom-cursor-dot-id"></div>
+
+    <!-- Ambient Static Image Backdrop system is controlled in CSS -->
+
+    <!-- Cinematic Page Preloader -->
+    <div class="preloader" id="cinematic-preloader-id">
+        <div class="preloader-content">
+            <div class="preloader-logo-wrapper">
+                <svg class="preloader-svg-logo" viewBox="0 0 100 100" width="80" height="80">
+                    <circle cx="50" cy="50" r="45" stroke="#1E1B3A" stroke-width="2" fill="none" stroke-dasharray="283" stroke-dashoffset="283" id="logo-circle-svg"></circle>
+                    <path d="M35 50 L47 62 L65 38" stroke="#00E5FF" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="100" id="logo-check-svg"></path>
+                </svg>
+                <h1 class="preloader-brand" id="preloader-brand-text">AETHER</h1>
+            </div>
+            <div class="preloader-status-wrapper">
+                <div class="preloader-bar-bg">
+                    <div class="preloader-bar-fill" id="preloader-progress-bar-fill"></div>
+                </div>
+                <div class="preloader-info">
+                    <span class="preloader-message" id="preloader-status-message">Initializing environment...</span>
+                    <span class="preloader-percentage" id="preloader-percentage-num">00%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-layout" id="main-app-layout-wrapper" style="flex-direction: column;">
+        <!-- Top Navigation Bar -->
+        <header class="navbar-top glass" id="app-navbar-top">
+            <div class="navbar-left">
+                <div class="brand-monogram">Æ</div>
+                <span class="brand-text">AETHER</span>
+            </div>
+
+            <!-- Horizontal Navigation Links -->
+            <nav class="navbar-nav">
+                <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="#tasks" class="nav-item" data-tab="tasks">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span class="nav-label">All Tasks</span>
+                </a>
+                <a href="#kanban" class="nav-item" data-tab="kanban">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span class="nav-label">Kanban Board</span>
+                </a>
+                <a href="#calendar" class="nav-item" data-tab="calendar">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span class="nav-label">Calendar</span>
+                </a>
+                <a href="#projects" class="nav-item" data-tab="projects">
+                    <i class="fa-solid fa-folder-tree"></i>
+                    <span class="nav-label">Categories</span>
+                </a>
+                <a href="#settings" class="nav-item" data-tab="settings">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </nav>
+
+            <div class="navbar-right">
+                <!-- Focus Timer Shortcut widget -->
+                <div class="nav-focus-widget glass" id="nav-focus-indicator-widget">
+                    <span class="focus-pulse-dot active"></span>
+                    <span class="focus-time-readout" id="nav-focus-timer-text">25:00</span>
+                </div>
+
+                <!-- Quick Add Floating Trigger -->
+                <button class="magnetic-btn luxury-btn-primary" id="navbar-quick-add-btn" title="Quick Task Add">
+                    <i class="fa-solid fa-plus"></i> <span>Quick Action</span>
+                </button>
+
+                <!-- Profile Badge -->
+                <div class="navbar-profile-card" id="navbar-profile-card-id">
+                    <img src="" alt="Avatar" class="profile-avatar" id="sidebar-avatar-img">
+                    <span class="profile-name-span" id="sidebar-user-name">Loading...</span>
+                </div>
+
+                <!-- Disconnect -->
+                <a href="/logout" class="navbar-logout-btn" id="sidebar-logout-btn-id" title="Disconnect">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-content-scroll" id="main-content-scroll-container">
+            <div class="page-title-header" id="main-nav-bar-id" style="margin-bottom: 2rem;">
+                <h2 class="section-title-heading" id="dynamic-section-title">Dashboard</h2>
+                <span class="section-subtitle-description" id="dynamic-section-subtitle">Chronological summary of your workspace actions.</span>
+            </div>
+
+            <main class="page-viewport-container" id="main-page-viewport-container-id">
+                <!-- VIEW 1: DASHBOARD -->
+                <section class="tab-view active" id="view-dashboard">
+                    <!-- Hero Section -->
+                    <div class="hero-bento-section">
+                        <div class="hero-text-block">
+                            <span class="hero-date-pill" id="dashboard-date-pill-text">Tuesday, May 19</span>
+                            <h1 class="hero-greeting-heading" id="dashboard-greeting-text">Welcome back, User</h1>
+                            <p class="hero-lead-text">"The secret of constant velocity is focused simplicity." Prepare your flow state.</p>
+                        </div>
+                        <div class="hero-widget-streak glass tilt-card">
+                            <div class="streak-icon-wrap"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                            <div class="streak-counter-meta">
+                                <h3 class="streak-days-count counter-number" id="widget-streak-count">0</h3>
+                                <p class="streak-label">Day Active Streak</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bento Grid Dashboard Widgets -->
+                    <div class="bento-grid-dashboard">
+                        <!-- Widget: AI Insights -->
+                        <div class="bento-card col-span-2 glass tilt-card" id="widget-ai-insights-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-wand-magic-sparkles text-glow"></i> AETHER AI Insights</h3>
+                                <span class="badge badge-accent">Predictive Engine</span>
+                            </div>
+                            <div class="ai-insights-scroller" id="ai-insights-wrapper-id">
+                                <!-- Generated list of insights -->
+                                <div class="ai-insight-skeleton">
+                                    <div class="skeleton-line short"></div>
+                                    <div class="skeleton-line"></div>
+                                    <div class="skeleton-line"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Focus Timer Widget -->
+                        <div class="bento-card glass tilt-card" id="widget-focus-timer-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-stopwatch"></i> Focus Flow Chamber</h3>
+                            </div>
+                            <div class="focus-widget-body">
+                                <div class="focus-timer-dial">
+                                    <svg class="focus-dial-svg" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="45" stroke="rgba(140, 139, 160, 0.1)" stroke-width="3" fill="none"></circle>
+                                        <circle cx="50" cy="50" r="45" stroke="#00E5FF" stroke-width="4" fill="none" stroke-dasharray="283" stroke-dashoffset="283" id="focus-dial-fill-svg"></circle>
+                                    </svg>
+                                    <div class="timer-countdown-text" id="focus-timer-countdown">25:00</div>
+                                </div>
+                                <div class="focus-action-btns">
+                                    <button class="magnetic-btn focus-ctrl-btn play" id="focus-timer-start-btn" title="Start Session"><i class="fa-solid fa-play"></i></button>
+                                    <button class="magnetic-btn focus-ctrl-btn stop" id="focus-timer-stop-btn" title="Stop Session" disabled><i class="fa-solid fa-stop"></i></button>
+                                    <button class="magnetic-btn focus-ctrl-btn reset" id="focus-timer-reset-btn" title="Reset Timer"><i class="fa-solid fa-rotate-left"></i></button>
+                                </div>
+                                <div class="focus-stats-readout">
+                                    <span class="focus-total-mins" id="focus-total-accumulated-mins">Total: 0 mins</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Goal Progress Ring -->
+                        <div class="bento-card glass tilt-card" id="widget-goal-progress-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-circle-notch"></i> Today's Completion</h3>
+                            </div>
+                            <div class="goal-widget-body">
+                                <div class="progress-ring-lg">
+                                    <svg viewBox="0 0 100 100" class="ring-svg">
+                                        <circle cx="50" cy="50" r="40" class="ring-bg"></circle>
+                                        <circle cx="50" cy="50" r="40" class="ring-fill" id="dashboard-progress-ring-fill"></circle>
+                                    </svg>
+                                    <div class="ring-center-value" id="dashboard-progress-ring-text">0%</div>
+                                </div>
+                                <div class="goal-meta-list">
+                                    <span id="dashboard-completed-stats-text">0 of 0 tasks resolved</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Productivity Heatmap/Analytics Chart -->
+                        <div class="bento-card col-span-2 glass tilt-card" id="widget-analytics-chart-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-chart-line"></i> Velocity Analytics</h3>
+                                <div class="chart-options">
+                                    <span class="badge">7 Days Log</span>
+                                </div>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="dashboard-productivity-chart-canvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Daily Inspiration (Internet Image) -->
+                        <div class="bento-card glass tilt-card daily-inspiration-image-card" style="background-image: linear-gradient(rgba(6, 5, 10, 0.15), rgba(6, 5, 10, 0.85)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80'); background-size: cover; background-position: center; min-height: 280px; justify-content: flex-end; display: flex; flex-direction: column;">
+                            <div class="inspiration-content" style="z-index: 2; margin-top: auto;">
+                                <span class="badge badge-accent">Daily Muse</span>
+                                <p class="inspiration-quote" style="font-family: var(--font-heading); font-size: 1.15rem; font-style: italic; color: var(--accent-light); margin-top: 0.8rem; line-height: 1.4; text-shadow: 0 2px 8px rgba(0,0,0,0.8);">"Simplicity is the ultimate sophistication."</p>
+                                <span class="inspiration-author" style="font-size: 0.8rem; color: #CCBEB1; margin-top: 0.2rem; display: block; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">— Leonardo da Vinci</span>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Overdue and Today task lists -->
+                        <div class="bento-card glass" id="widget-brief-tasks-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-bell"></i> Smart Reminders</h3>
+                            </div>
+                            <div class="bento-task-reminders" id="dashboard-reminders-list-id">
+                                <!-- Reminders render here -->
+                                <p class="no-reminders-msg">Your agenda is fully clear for today.</p>
+                            </div>
+                        </div>
+
+                        <!-- Widget: Activity Timeline Log -->
+                        <div class="bento-card glass" id="widget-activity-timeline-container">
+                            <div class="bento-card-header">
+                                <h3><i class="fa-solid fa-clock-rotate-left"></i> Workspace Log</h3>
+                            </div>
+                            <div class="timeline-scroller-wrapper" id="dashboard-activities-timeline-id">
+                                <!-- Logs inject here -->
+                                <div class="timeline-empty">
+                                    <p>No actions recorded in this workspace session yet.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 2: ALL TASKS -->
+                <section class="tab-view" id="view-tasks">
+                    <div class="tasks-toolbar-wrapper glass">
+                        <div class="search-field-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="tasks-search-input-id" class="custom-glass-input" placeholder="Search tasks, descriptions, tags...">
+                        </div>
+                        <div class="toolbar-actions-group">
+                            <select id="tasks-filter-priority" class="custom-glass-select">
+                                <option value="all">All Priorities</option>
+                                <option value="high">High Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                            <select id="tasks-filter-category" class="custom-glass-select">
+                                <option value="all">All Categories</option>
+                            </select>
+                            <div class="view-switches-toggle">
+                                <button class="view-switch-btn active" id="view-switch-list-btn" title="List View"><i class="fa-solid fa-list"></i></button>
+                                <button class="view-switch-btn" id="view-switch-grid-btn" title="Grid View"><i class="fa-solid fa-grip"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tasks Table / Grid Hybrid Container -->
+                    <div class="tasks-hybrid-layout list-mode" id="tasks-hybrid-viewport">
+                        <!-- Header for Table List Mode -->
+                        <div class="tasks-table-header">
+                            <div class="col-check"></div>
+                            <div class="col-title">Task</div>
+                            <div class="col-category">Category</div>
+                            <div class="col-priority">Priority</div>
+                            <div class="col-date">Due Date</div>
+                            <div class="col-actions"></div>
+                        </div>
+                        <div class="tasks-list-viewport-scroll" id="tasks-list-content-wrapper">
+                            <!-- Tasks inject here -->
+                            <div class="tasks-skeleton-loader">
+                                <div class="skeleton-row"></div>
+                                <div class="skeleton-row"></div>
+                                <div class="skeleton-row"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 3: KANBAN BOARD -->
+                <section class="tab-view" id="view-kanban">
+                    <div class="kanban-board-wrapper" id="kanban-board-container-id">
+                        <!-- Column: Backlog/Todo -->
+                        <div class="kanban-column glass" data-column="todo">
+                            <div class="kanban-column-header">
+                                <span class="col-dot status-todo"></span>
+                                <h3 class="column-title">To Do</h3>
+                                <span class="task-count-pill" id="kanban-count-todo">0</span>
+                            </div>
+                            <div class="kanban-cards-wrapper" id="kanban-cards-todo">
+                                <!-- Cards inject here -->
+                            </div>
+                        </div>
+
+                        <!-- Column: Progress -->
+                        <div class="kanban-column glass" data-column="progress">
+                            <div class="kanban-column-header">
+                                <span class="col-dot status-progress"></span>
+                                <h3 class="column-title">In Progress</h3>
+                                <span class="task-count-pill" id="kanban-count-progress">0</span>
+                            </div>
+                            <div class="kanban-cards-wrapper" id="kanban-cards-progress">
+                                <!-- Cards inject here -->
+                            </div>
+                        </div>
+
+                        <!-- Column: Review -->
+                        <div class="kanban-column glass" data-column="review">
+                            <div class="kanban-column-header">
+                                <span class="col-dot status-review"></span>
+                                <h3 class="column-title">In Review</h3>
+                                <span class="task-count-pill" id="kanban-count-review">0</span>
+                            </div>
+                            <div class="kanban-cards-wrapper" id="kanban-cards-review">
+                                <!-- Cards inject here -->
+                            </div>
+                        </div>
+
+                        <!-- Column: Done -->
+                        <div class="kanban-column glass" data-column="done">
+                            <div class="kanban-column-header">
+                                <span class="col-dot status-done"></span>
+                                <h3 class="column-title">Done</h3>
+                                <span class="task-count-pill" id="kanban-count-done">0</span>
+                            </div>
+                            <div class="kanban-cards-wrapper" id="kanban-cards-done">
+                                <!-- Cards inject here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 4: CALENDAR -->
+                <section class="tab-view" id="view-calendar">
+                    <div class="calendar-bento-layout">
+                        <!-- Full Calendar Container -->
+                        <div class="calendar-main-card glass">
+                            <div class="calendar-header-actions">
+                                <div class="calendar-navigation">
+                                    <button class="magnetic-btn nav-btn" id="calendar-prev-month-btn"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <h2 class="calendar-month-year-title" id="calendar-month-year-text">May 2026</h2>
+                                    <button class="magnetic-btn nav-btn" id="calendar-next-month-btn"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-view-toggles">
+                                    <span class="badge badge-accent">Interactive Grid</span>
+                                </div>
+                            </div>
+                            <div class="calendar-grid-wrapper">
+                                <div class="calendar-weekdays-header">
+                                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                                </div>
+                                <div class="calendar-days-grid" id="calendar-days-grid-id">
+                                    <!-- Days inject here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Side Planner Column -->
+                        <div class="calendar-planner-card glass">
+                            <div class="planner-header">
+                                <h3>Agenda Planner</h3>
+                                <span class="planner-date" id="planner-selected-date-text">Tuesday, May 19</span>
+                            </div>
+                            <div class="planner-events-list" id="planner-events-list-id">
+                                <!-- Scheduled Tasks list for selected day -->
+                                <p class="no-events-msg">No tasks scheduled for this day.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW 5: CATEGORIES / PROJECTS -->
+                <section class="tab-view" id="view-projects">
+                    <div class="projects-action-bar" style="background-image: linear-gradient(to right, rgba(10, 8, 7, 0.9), rgba(10, 8, 7, 0.3)), url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; padding: 2.2rem; border-radius: var(--corner-radius); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-glass);">
+                        <div class="cover-text">
+                            <h2 style="font-family: var(--font-heading); color: var(--accent-light); font-size: 1.6rem; margin-bottom: 0.4rem;">Workspace Channels</h2>
+                            <p style="color: var(--accent-sand); font-size: 0.85rem;">Organize items into categories and track progress weights.</p>
+                        </div>
+                        <button class="magnetic-btn luxury-btn-primary" id="create-category-btn-id"><i class="fa-solid fa-plus"></i> Add New Category</button>
+                    </div>
+                    <div class="projects-grid-layout" id="categories-grid-container">
+                        <!-- Category Cards inject here -->
+                    </div>
+                </section>
+
+                <!-- VIEW 6: SETTINGS -->
+                <section class="tab-view" id="view-settings">
+                    <div class="settings-banner-cover" style="background-image: linear-gradient(to right, rgba(10, 8, 7, 0.9), rgba(10, 8, 7, 0.3)), url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center; padding: 2.2rem; border-radius: var(--corner-radius); margin-bottom: 2rem; border: 1px solid var(--border-glass);">
+                        <h2 style="font-family: var(--font-heading); color: var(--accent-light); font-size: 1.6rem; margin-bottom: 0.4rem;">System Control</h2>
+                        <p style="color: var(--accent-sand); font-size: 0.85rem;">Customize accent shades, visual themes, and workspace credentials.</p>
+                    </div>
+                    <div class="settings-grid-layout">
+                        <!-- Settings block: Profile -->
+                        <div class="settings-card glass">
+                            <div class="settings-header">
+                                <h3><i class="fa-solid fa-user-gear"></i> Workspace Profile</h3>
+                            </div>
+                            <form id="settings-profile-form" class="settings-form">
+                                <div class="form-group-item">
+                                    <label>Email Address</label>
+                                    <input type="email" id="settings-profile-email" class="custom-glass-input" readonly>
+                                </div>
+                                <div class="form-group-item">
+                                    <label>Display Name</label>
+                                    <input type="text" id="settings-profile-name" class="custom-glass-input" required placeholder="User name">
+                                </div>
+                                <button type="submit" class="magnetic-btn luxury-btn-primary form-submit-btn">Update Profile</button>
+                            </form>
+                        </div>
+
+                        <!-- Settings block: Appearance -->
+                        <div class="settings-card glass">
+                            <div class="settings-header">
+                                <h3><i class="fa-solid fa-palette"></i> Aesthetic Appearance</h3>
+                            </div>
+                            <div class="settings-appearance-body">
+                                <div class="form-group-item">
+                                    <label>Accent Customization</label>
+                                    <div class="accent-color-selectors-wrap">
+                                        <button class="accent-dot active" data-color="#00E5FF" style="background-color: #00E5FF;" title="Neon Teal"></button>
+                                        <button class="accent-dot" data-color="#E5C158" style="background-color: #E5C158;" title="Royal Gold"></button>
+                                        <button class="accent-dot" data-color="#8C8BA0" style="background-color: #8C8BA0;" title="Slate Silver"></button>
+                                        <button class="accent-dot" data-color="#A020F0" style="background-color: #A020F0;" title="Royal Violet"></button>
+                                    </div>
+                                </div>
+                                <div class="form-group-item">
+                                    <label>Atmosphere Theme</label>
+                                    <div class="theme-switches-wrap">
+                                        <button class="theme-switch-btn active" id="theme-switch-dark" data-theme="dark"><i class="fa-solid fa-moon"></i> Luxury Dark</button>
+                                        <button class="theme-switch-btn" id="theme-switch-light" data-theme="light"><i class="fa-solid fa-sun"></i> Ambient Light</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings block: Sessions and App Meta -->
+                        <div class="settings-card glass col-span-2">
+                            <div class="settings-header">
+                                <h3><i class="fa-solid fa-shield-halved"></i> Device Sessions & Status</h3>
+                            </div>
+                            <div class="sessions-dashboard-table">
+                                <div class="session-row">
+                                    <div class="session-meta">
+                                        <i class="fa-solid fa-laptop-code session-icon"></i>
+                                        <div class="session-info">
+                                            <h4>Chrome / Windows 11 (Current Session)</h4>
+                                            <span>IP: 127.0.0.1 — Active Now</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge badge-accent">Active Connection</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Quick Add Task Modal Overlay -->
+    <div class="modal-overlay" id="quick-add-modal-overlay-id">
+        <div class="modal-content glass" id="quick-add-modal-content-id">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-plus-minus"></i> Create New Task</h3>
+                <button class="modal-close-btn" id="quick-add-modal-close-btn">&times;</button>
+            </div>
+            <form id="quick-add-todo-form" class="modal-form">
+                <div class="form-group-item">
+                    <label for="modal-task-title">Title</label>
+                    <input type="text" id="modal-task-title" class="custom-glass-input" required autocomplete="off" placeholder="What needs to be accomplished?">
+                </div>
+                <div class="form-group-item">
+                    <label for="modal-task-desc">Description</label>
+                    <textarea id="modal-task-desc" class="custom-glass-input" rows="3" placeholder="Add secondary actions or comments..."></textarea>
+                </div>
+                <div class="form-grid-columns">
+                    <div class="form-group-item">
+                        <label for="modal-task-priority">Priority</label>
+                        <select id="modal-task-priority" class="custom-glass-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label for="modal-task-category">Category</label>
+                        <select id="modal-task-category" class="custom-glass-select">
+                            <option value="">General</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid-columns">
+                    <div class="form-group-item">
+                        <label for="modal-task-due">Due Date</label>
+                        <input type="date" id="modal-task-due" class="custom-glass-date-input">
+                    </div>
+                    <div class="form-group-item">
+                        <label for="modal-task-tags">Tags</label>
+                        <input type="text" id="modal-task-tags" class="custom-glass-input" placeholder="e.g. design, urgent">
+                    </div>
+                </div>
+                <div class="modal-footer-actions">
+                    <div class="ai-status-pulse-label" id="modal-ai-assist-status">
+                        <i class="fa-solid fa-microchip"></i> <span>AI Assistant Standby</span>
+                    </div>
+                    <button type="submit" class="magnetic-btn luxury-btn-primary">Resolve Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal Overlay -->
+    <div class="modal-overlay" id="edit-task-modal-overlay-id">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-nib"></i> Modify Workspace Task</h3>
+                <button class="modal-close-btn" id="edit-task-modal-close-btn">&times;</button>
+            </div>
+            <form id="edit-todo-form" class="modal-form">
+                <input type="hidden" id="edit-task-id">
+                <div class="form-group-item">
+                    <label for="edit-modal-task-title">Title</label>
+                    <input type="text" id="edit-modal-task-title" class="custom-glass-input" required autocomplete="off">
+                </div>
+                <div class="form-group-item">
+                    <label for="edit-modal-task-desc">Description</label>
+                    <textarea id="edit-modal-task-desc" class="custom-glass-input" rows="3"></textarea>
+                </div>
+                <div class="form-grid-columns">
+                    <div class="form-group-item">
+                        <label for="edit-modal-task-priority">Priority</label>
+                        <select id="edit-modal-task-priority" class="custom-glass-select">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group-item">
+                        <label for="edit-modal-task-category">Category</label>
+                        <select id="edit-modal-task-category" class="custom-glass-select">
+                            <option value="">General</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-grid-columns">
+                    <div class="form-group-item">
+                        <label for="edit-modal-task-due">Due Date</label>
+                        <input type="date" id="edit-modal-task-due" class="custom-glass-date-input">
+                    </div>
+                    <div class="form-group-item">
+                        <label for="edit-modal-task-tags">Tags</label>
+                        <input type="text" id="edit-modal-task-tags" class="custom-glass-input" placeholder="e.g. coding, urgent">
+                    </div>
+                </div>
+                <div class="modal-footer-actions">
+                    <button type="submit" class="magnetic-btn luxury-btn-primary">Update Workspace Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Category Modal Overlay -->
+    <div class="modal-overlay" id="create-cat-modal-overlay-id">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-folder-plus"></i> Create Workspace Category</h3>
+                <button class="modal-close-btn" id="create-cat-modal-close-btn">&times;</button>
+            </div>
+            <form id="create-cat-form-id" class="modal-form">
+                <div class="form-group-item">
+                    <label for="new-cat-name">Category Name</label>
+                    <input type="text" id="new-cat-name" class="custom-glass-input" required autocomplete="off" placeholder="e.g. Design Studio">
+                </div>
+                <div class="form-group-item">
+                    <label>Aesthetic Color Profile</label>
+                    <div class="accent-color-selectors-wrap" id="new-cat-color-wrap">
+                        <button type="button" class="accent-dot active" data-color="#00E5FF" style="background-color: #00E5FF;"></button>
+                        <button type="button" class="accent-dot" data-color="#E5C158" style="background-color: #E5C158;"></button>
+                        <button type="button" class="accent-dot" data-color="#8C8BA0" style="background-color: #8C8BA0;"></button>
+                        <button type="button" class="accent-dot" data-color="#A020F0" style="background-color: #A020F0;"></button>
+                    </div>
+                </div>
+                <div class="modal-footer-actions">
+                    <button type="submit" class="magnetic-btn luxury-btn-primary">Initialize Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Third Party Script Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.39/dist/lenis.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- Custom Modules -->
+    <script src="{{ url_for('static', filename='js/animate.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
